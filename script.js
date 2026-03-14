@@ -5,7 +5,6 @@ const brigadeCycles = {
   D:["off","day","night","rest"]
 };
 
-// сохраняем выбранную бригаду
 let selectedBrigade = localStorage.getItem("brigade") || "A";
 
 const calendarEl = document.querySelector(".calendar");
@@ -16,28 +15,21 @@ const checkBtn = document.getElementById("check-date");
 const monthNames = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
 const weekDays = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
 
-// ===== КНОПКИ БРИГАД =====
+// ===== Кнопки бригад =====
 document.querySelectorAll(".brigade-btn").forEach(btn => {
   btn.addEventListener("click", (e) => {
     e.preventDefault();
-
-    document.querySelectorAll(".brigade-btn")
-      .forEach(b => b.classList.remove("active"));
-
+    document.querySelectorAll(".brigade-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-
     selectedBrigade = btn.dataset.brigade;
     localStorage.setItem("brigade", selectedBrigade);
-
     generateCalendar();
   });
 });
 
-// при загрузке делаем активную
-document.querySelector(`[data-brigade="${selectedBrigade}"]`)
-  .classList.add("active");
+document.querySelector(`[data-brigade="${selectedBrigade}"]`).classList.add("active");
 
-// ===== ГЕНЕРАЦИЯ КАЛЕНДАРЯ =====
+// ===== Генерация календаря =====
 function generateCalendar(){
   calendarEl.innerHTML = "";
   const year = new Date().getFullYear();
@@ -45,6 +37,7 @@ function generateCalendar(){
   const today = new Date();
 
   for(let month=0; month<12; month++){
+    let monthHours = 0;
 
     const monthDiv = document.createElement("div");
     monthDiv.className = "month";
@@ -55,13 +48,11 @@ function generateCalendar(){
 
     const weekHeader = document.createElement("div");
     weekHeader.className = "week-header";
-
     weekDays.forEach(d=>{
       const el = document.createElement("div");
       el.textContent = d;
       weekHeader.appendChild(el);
     });
-
     monthDiv.appendChild(weekHeader);
 
     const daysContainer = document.createElement("div");
@@ -82,6 +73,8 @@ function generateCalendar(){
       const diffDays = Math.floor((date - new Date(year,0,1)) / 86400000);
       const shift = cycle[diffDays % 4];
 
+      if(shift === "day" || shift === "night") monthHours += 11.5;
+
       const cell = document.createElement("div");
       cell.className = "day-cell " + shift;
       cell.textContent = day;
@@ -92,9 +85,7 @@ function generateCalendar(){
       cell.appendChild(popup);
 
       cell.addEventListener("click", ()=>{
-        document.querySelectorAll(".day-cell")
-          .forEach(c => c.classList.remove("selected","show-popup"));
-
+        document.querySelectorAll(".day-cell").forEach(c => c.classList.remove("selected","show-popup"));
         cell.classList.add("selected","show-popup");
         cell.scrollIntoView({behavior:"smooth",block:"center"});
       });
@@ -107,37 +98,35 @@ function generateCalendar(){
     }
 
     monthDiv.appendChild(daysContainer);
+
+    const total = document.createElement("div");
+    total.className = "month-total";
+    total.innerHTML = `Итого часов отработано: <strong>${monthHours}</strong> ч`;
+    monthDiv.appendChild(total);
+
     calendarEl.appendChild(monthDiv);
   }
 }
 
-// ===== КНОПКА СЕГОДНЯ =====
+// ===== Кнопка Сегодня =====
 todayBtn.addEventListener("click", ()=>{
   const target = document.querySelector(".day-cell.today");
   if(target){
-    document.querySelectorAll(".day-cell")
-      .forEach(c => c.classList.remove("selected","show-popup"));
-
+    document.querySelectorAll(".day-cell").forEach(c => c.classList.remove("selected","show-popup"));
     target.classList.add("selected","show-popup");
     target.scrollIntoView({behavior:"smooth",block:"center"});
   }
 });
 
-// ===== ПРОВЕРКА ДАТЫ =====
+// ===== Проверка даты =====
 checkBtn.addEventListener("click", ()=>{
   if(!dateInput.value) return;
-
   const d = new Date(dateInput.value + "T00:00");
-
   const monthDivs = document.querySelectorAll(".month");
   const targetMonth = monthDivs[d.getMonth()];
   const dayCells = targetMonth.querySelectorAll(".day-cell:not(.empty)");
-
   dayCells.forEach(c => c.classList.remove("selected","show-popup"));
-
-  const targetDay = Array.from(dayCells)
-    .find(c => parseInt(c.textContent) === d.getDate());
-
+  const targetDay = Array.from(dayCells).find(c => parseInt(c.textContent) === d.getDate());
   if(targetDay){
     targetDay.classList.add("selected","show-popup");
     targetDay.scrollIntoView({behavior:"smooth",block:"center"});
@@ -150,8 +139,5 @@ function formatShift(s){
          s==="rest"?"Отсыпной":"Выходной";
 }
 
-generateCalendar();
-
-function formatShift(s){return s==="day"?"День":s==="night"?"Ночь":s==="rest"?"Отсыпной":"Выходной";}
-
+// ===== Запуск календаря =====
 generateCalendar();
