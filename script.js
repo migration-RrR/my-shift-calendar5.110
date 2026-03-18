@@ -11,7 +11,7 @@ const checkBtn = document.getElementById("check-date");
 const monthNames = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
 const weekDays = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
 
-const baseDate = new Date(2026, 2, 15);
+const baseDateUTC = new Date(Date.UTC(2026, 2, 15));
 baseDate.setHours(0,0,0,0);
 
 const brigadeOffsets = {
@@ -39,27 +39,26 @@ if(activeBtn) activeBtn.classList.add("active");
 
 function getShift(date){
 
-const cycle = ["day","night","rest","off"];
+  const cycle = ["day","night","rest","off"];
+  const d = new Date(date);
 
-const base = new Date(2026,2,15);
-base.setHours(0,0,0,0);
+  // переводим дату в UTC без влияния часов
+  const dUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 
-const d = new Date(date);
-d.setHours(0,0,0,0);
+  const diff = Math.floor((dUTC - baseDateUTC) / 86400000); // разница в днях от базовой даты UTC
 
-let diff = Math.floor((d - base) / 86400000);
+  const offsets = {
+    A:3,
+    B:2,
+    C:1,
+    D:0
+  };
 
-/* ночная смена сдвигает цикл */
-if(diff > 0){
-diff = Math.floor(diff * 0.75);
+  let index = (diff + offsets[selectedBrigade]) % 4;
+  if(index < 0) index += 4;
+
+  return cycle[index];
 }
-
-const offsets = {
-A:3, // 2 бригада
-B:2, // 1 бригада
-C:1, // 4 бригада
-D:0  // 3 бригада
-};
 
 let index = (diff + offsets[selectedBrigade]) % 4;
 if(index < 0) index += 4;
